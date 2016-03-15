@@ -1,7 +1,8 @@
 from django.db import models
+from restclients.models.base import RestClientsModel
 
 
-class GroupReference(models.Model):
+class GroupReference(RestClientsModel):
     uwregid = models.CharField(max_length=32)
     name = models.CharField(max_length=500)
     title = models.CharField(max_length=500)
@@ -13,7 +14,7 @@ class GroupReference(models.Model):
             self.uwregid, self.name, self.title, self.description)
 
 
-class Group(models.Model):
+class Group(RestClientsModel):
     CLASSIFICATION_NONE = "u"
     CLASSIFICATION_PUBLIC = "p"
     CLASSIFICATION_RESTRICTED = "r"
@@ -34,6 +35,7 @@ class Group(models.Model):
     title = models.CharField(max_length=500)
     description = models.CharField(max_length=2000, null=True)
     contact = models.CharField(max_length=120, null=True)
+    membership_modified = models.DateTimeField()
     authnfactor = models.PositiveSmallIntegerField(max_length=1,
                                                    choices=((1, ""), (2, "")),
                                                    default=1)
@@ -49,6 +51,7 @@ class Group(models.Model):
     reporttoorig = models.SmallIntegerField(max_length=1, null=True,
                                             choices=((1, "Yes"), (0, "No")),
                                             default=0)
+
     def __init__(self, *args, **kwargs):
         super(Group, self).__init__(*args, **kwargs)
         self.admins = []
@@ -65,12 +68,12 @@ class Group(models.Model):
     def has_regid(self):
         return self.uwregid is not None and len(self.uwregid) == 32
 
+
 class CourseGroup(Group):
     SPRING = "spring"
     SUMMER = "summer"
     AUTUMN = "autumn"
     WINTER = "winter"
-
 
     QUARTERNAME_CHOICES = (
         (SPRING, "Spring"),
@@ -90,7 +93,7 @@ class CourseGroup(Group):
     sln = models.PositiveIntegerField()
 
 
-class GroupUser(models.Model):
+class GroupUser(RestClientsModel):
     UWNETID_TYPE = "uwnetid"
     EPPN_TYPE = "eppn"
     GROUP_TYPE = "group"
@@ -128,7 +131,8 @@ class GroupUser(models.Model):
         return "{name: %s, user_type: %s}" % (
             self.name, self.user_type)
 
-class GroupMember(models.Model):
+
+class GroupMember(RestClientsModel):
     UWNETID_TYPE = "uwnetid"
     EPPN_TYPE = "eppn"
     GROUP_TYPE = "group"
@@ -155,7 +159,8 @@ class GroupMember(models.Model):
         return self.member_type == self.GROUP_TYPE
 
     def __eq__(self, other):
-        return self.name == other.name and self.member_type == other.member_type
+        return self.name == other.name and\
+            self.member_type == other.member_type
 
     def __str__(self):
         return "{name: %s, user_type: %s}" % (
